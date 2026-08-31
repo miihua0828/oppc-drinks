@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OPPC飲料訂購系統</title>
+<style>
+* { box-sizing: border-box; }
+html,body { margin:0; padding:0; background:#F6F1E4; }
+body {
+  --paper:#F6F1E4; --card:#FFFDF7; --ink:#2A2118; --sub:#8A7A64;
+  --line:#E7DCC7; --sugar:#9A551F; --sugar-soft:#F1E4D2; --tea:#5E7B4F;
+  --tea-soft:#E7EEDD; --pearl:#33271A; --danger:#B14A3B;
+  color:var(--ink);
+  font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.app { max-width:480px; margin:0 auto; padding:0 14px 44px; }
+h1,h2 { margin:0; }
+button { font-family:inherit; cursor:pointer; }
+
+.hd { padding:16px 4px 8px; }
+.pearls { display:flex; gap:7px; margin-bottom:12px; }
+.pearl { width:9px; height:9px; border-radius:50%; background:var(--pearl); opacity:.85; }
+.pearl:nth-child(even){ background:var(--sugar); }
+.hd-row { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.shop { font-size:24px; font-weight:800; letter-spacing:.5px; line-height:1.15; }
+.dl { margin:5px 0 0; font-size:13px; color:var(--sub); }
+.dl b { color:var(--sugar); font-weight:800; }
+.gear { border:1.5px solid var(--sugar); background:var(--sugar-soft); color:var(--sugar);
+  border-radius:999px; padding:7px 15px; font-size:13px; font-weight:700; white-space:nowrap; }
+.gear:active { transform:scale(.96); }
+.tally { margin-top:14px; font-size:14px; color:var(--sub); font-weight:600; }
+.tally b { color:var(--sugar); font-size:19px; font-weight:800; }
+.tally .dot { margin:0 8px; color:var(--line); }
+
+.slip { position:relative; background:var(--card); border:1.5px solid var(--line);
+  border-radius:18px; padding:18px 16px 16px; margin-top:12px; box-shadow:0 2px 0 rgba(154,85,31,.06); }
+.slip-notch { position:absolute; top:-1px; left:24px; right:24px; height:0; border-top:2px dashed var(--line); }
+.fld { display:block; margin-bottom:14px; }
+.fld.row { display:flex; gap:12px; align-items:flex-end; }
+.fld.grow { flex:1; margin-bottom:0; }
+.lb { display:block; font-size:12.5px; font-weight:700; color:var(--sub); margin-bottom:6px; letter-spacing:.3px; }
+.in { width:100%; border:1.5px solid var(--line); background:#fff; color:var(--ink);
+  border-radius:11px; padding:11px 12px; font-size:15px; outline:none; }
+.in:focus { border-color:var(--sugar); box-shadow:0 0 0 3px var(--sugar-soft); }
+select.in { -webkit-appearance:none; appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%238A7A64' stroke-width='1.6'/></svg>");
+  background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
+.note { font-size:13px; color:var(--sub); background:#F3ECDD; border-radius:10px; padding:9px 12px; display:inline-block; }
+
+.seg { display:flex; gap:8px; flex-wrap:wrap; }
+.seg-b { flex:1; min-width:92px; border:1.5px solid var(--line); background:#fff; color:var(--ink);
+  border-radius:11px; padding:11px; font-size:14px; font-weight:600; }
+.seg-b.on { border-color:var(--sugar); background:var(--sugar-soft); color:var(--sugar); }
+
+.chips { display:flex; flex-wrap:wrap; gap:8px; }
+.chip { border:1.5px solid var(--line); background:#fff; color:var(--ink);
+  border-radius:999px; padding:8px 14px; font-size:13.5px; font-weight:600; }
+.chip.on { border-color:var(--tea); background:var(--tea-soft); color:var(--tea); }
+.chip:active,.seg-b:active { transform:scale(.97); }
+
+.stepper { display:flex; align-items:center; border:1.5px solid var(--line);
+  border-radius:11px; overflow:hidden; background:#fff; width:120px; }
+.stepper button { width:38px; height:44px; border:none; background:#fff; font-size:20px; color:var(--sugar); font-weight:700; }
+.stepper button:active { background:var(--sugar-soft); }
+.stepper span { flex:1; text-align:center; font-size:16px; font-weight:700; }
+
+.submit { width:100%; border:none; background:var(--sugar); color:#fff; border-radius:13px; padding:15px;
+  font-size:16px; font-weight:800; margin-top:4px; display:flex; align-items:center; justify-content:center; gap:10px; letter-spacing:.5px; }
+.submit:active { transform:scale(.98); background:#873f12; }
+.submit .price { background:rgba(255,255,255,.22); padding:3px 10px; border-radius:8px; font-size:14px; }
+
+.list { margin-top:22px; }
+.list-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px; }
+.list-hd h2 { font-size:17px; font-weight:800; }
+.list-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.ghost { border:1.5px solid var(--line); background:var(--card); color:var(--ink);
+  border-radius:999px; padding:7px 14px; font-size:13px; font-weight:600; }
+.ghost:active { transform:scale(.96); }
+.ghost.danger { color:var(--danger); border-color:#EAD3CE; }
+.empty { color:var(--sub); font-size:14px; line-height:1.6; padding:18px 4px;
+  background:var(--card); border:1.5px dashed var(--line); border-radius:14px; text-align:center; }
+
+.person { background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:8px 12px 4px; margin-bottom:10px; }
+.person-name { font-size:13px; font-weight:800; color:var(--sugar); padding:4px 0 6px; }
+.ord { display:flex; align-items:center; gap:8px; padding:8px 0; border-top:1px solid var(--line); animation:pop .25s ease; }
+.ord-main { flex:1; min-width:0; }
+.ord-drink { display:block; font-size:15px; font-weight:700; }
+.ord-spec { display:block; font-size:12.5px; color:var(--sub); margin-top:2px; }
+.ord-price { font-size:14px; font-weight:700; white-space:nowrap; }
+.del { width:28px; height:28px; border-radius:8px; border:none; background:transparent; color:var(--sub); font-size:14px; }
+.del:active { background:#F0E3D3; color:var(--danger); }
+
+.grouped { background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:10px 14px; }
+.grouped-hint { font-size:12.5px; color:var(--sub); margin:2px 0 8px; }
+.grow-row { display:flex; align-items:center; gap:8px; padding:9px 0; border-top:1px solid var(--line); }
+.grow-row:first-child { border-top:none; }
+.g-name { font-weight:700; font-size:15px; }
+.g-spec { flex:1; font-size:12.5px; color:var(--sub); }
+.g-count { font-weight:800; color:var(--sugar); font-size:15px; }
+.grand { text-align:right; font-weight:800; font-size:15px; padding:12px 4px 2px; }
+
+#printArea { display:none; }
+@media print {
+  html,body { background:#fff; }
+  .app, #modalRoot, #toastRoot { display:none !important; }
+  #printArea { display:block !important; color:#000; padding:0 6px; font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif; }
+  .pa-title { font-size:20px; font-weight:800; margin:0 0 2px; }
+  .pa-sub { font-size:12px; margin:0 0 10px; }
+  .pa-sec { font-size:13px; font-weight:800; margin:14px 0 6px; border-bottom:1px solid #000; padding-bottom:3px; }
+  .pa-row { display:flex; justify-content:space-between; gap:8px; font-size:13px; padding:3px 0; }
+  .pa-row .r-spec { flex:1; color:#333; font-size:12px; }
+  .pa-total { font-size:15px; font-weight:800; margin-top:12px; text-align:right; border-top:2px solid #000; padding-top:6px; }
+}
+
+.toast { position:fixed; left:50%; bottom:26px; transform:translateX(-50%); background:var(--ink); color:#fff;
+  padding:11px 20px; border-radius:999px; font-size:14px; font-weight:600; z-index:60; box-shadow:0 6px 20px rgba(0,0,0,.25); animation:pop .2s ease; }
+.modal { position:fixed; inset:0; background:rgba(42,33,24,.5); z-index:50; display:flex; align-items:flex-end; justify-content:center; }
+.sheet { background:var(--paper); width:100%; max-width:480px; max-height:88vh; border-radius:20px 20px 0 0; display:flex; flex-direction:column; animation:up .28s ease; }
+.sheet-hd { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1.5px solid var(--line); }
+.sheet-hd h2 { font-size:18px; font-weight:800; }
+.x { border:none; background:transparent; font-size:18px; color:var(--sub); width:32px; height:32px; }
+.sheet-body { padding:16px 18px; overflow-y:auto; }
+.shop-list { display:flex; flex-direction:column; gap:10px; }
+.shop-opt { display:flex; align-items:center; justify-content:space-between; gap:10px; border:1.5px solid var(--line);
+  background:#fff; border-radius:14px; padding:15px 16px; text-align:left; width:100%; }
+.shop-opt.on { border-color:var(--sugar); background:var(--sugar-soft); }
+.so-name { font-size:16px; font-weight:800; }
+.so-sub { font-size:12.5px; color:var(--sub); margin-top:3px; }
+.so-check { color:var(--sugar); font-weight:800; font-size:15px; }
+.switch-note { font-size:12px; color:var(--sub); margin:4px 2px 12px; line-height:1.5; }
+
+@keyframes pop { from{opacity:0;transform:translateY(4px) scale(.98);} to{opacity:1;transform:none;} }
+@keyframes up { from{transform:translateY(100%);} to{transform:none;} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;} }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hd">
+    <div class="pearls"><span class="pearl"></span><span class="pearl"></span><span class="pearl"></span><span class="pearl"></span><span class="pearl"></span><span class="pearl"></span><span class="pearl"></span></div>
+    <div class="hd-row">
+      <div>
+        <h1 class="shop">OPPC飲料訂購系統</h1>
+        <p class="dl" id="curShop"></p>
+      </div>
+      <button class="gear" id="btnShop">選擇店家</button>
+    </div>
+    <div class="tally"><b id="tCups">0</b> 杯 <span class="dot">·</span> <b id="tMoney">$0</b></div>
+  </header>
+
+  <section class="slip">
+    <div class="slip-notch"></div>
+    <label class="fld"><span class="lb">你的名字</span><input class="in" id="fName" placeholder="輸入名字" /></label>
+    <label class="fld"><span class="lb">選飲料</span><select class="in" id="fDrink"></select></label>
+    <div class="fld"><span class="lb">杯型</span><div class="seg" id="fSize"></div></div>
+    <div class="fld" id="fSugarWrap"><span class="lb">糖度</span><div class="chips" id="fSugar"></div></div>
+    <div class="fld"><span class="lb">冰塊</span><div class="chips" id="fIce"></div></div>
+    <div class="fld" id="fTopWrap"><span class="lb">加料</span><div class="chips" id="fTop"></div></div>
+    <div class="fld row">
+      <div><span class="lb">數量</span>
+        <div class="stepper"><button id="qMinus">−</button><span id="qVal">1</span><button id="qPlus">＋</button></div></div>
+      <label class="fld grow"><span class="lb">備註（可留白）</span><input class="in" id="fNote" placeholder="例：不要吸管" /></label>
+    </div>
+    <button class="submit" id="btnAdd">加入訂單 <span class="price" id="curPrice">$0</span></button>
+  </section>
+
+  <section class="list">
+    <div class="list-hd">
+      <h2>目前訂單</h2>
+      <div class="list-actions">
+        <button class="ghost" id="btnShare" style="display:none">傳出去</button>
+        <button class="ghost" id="btnPrint" style="display:none">列印</button>
+        <button class="ghost" id="btnToggle">店家彙總</button>
+        <button class="ghost danger" id="btnClear" style="display:none">清空</button>
+      </div>
+    </div>
+    <div id="listBody"><p class="empty">載入中…</p></div>
+  </section>
+</div>
+
+<div id="printArea"></div>
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+"use strict";
+
+/* =========================================================================
+   三家店，各綁定固定菜單。每款飲料自帶可選杯型 s:[[杯型,價格]...]，
+   杯型代號 M=中杯 L=一般杯 XL=胖胖杯。cold:true=僅冷飲、fixed:true=甜度固定。
+   要改菜單改 SHOPS 即可。
+   ========================================================================= */
+var SHOPS = [
+  {
+    id:"s1", name:"米里 mini",
+    sugars:["正常糖","少糖","半糖","微糖","無糖"],
+    ices:["正常冰","少冰","微冰","去冰","熱"],
+    toppings:[{name:"波霸",price:10},{name:"蘆薈",price:10},{name:"紅豆",price:15},{name:"仙草凍",price:10},{name:"椰果",price:15},{name:"QQ",price:15},{name:"布丁",price:15}],
+    drinks:[
+      /* 新茶癮主張 */
+      {series:"新茶癮主張", n:"莓莓青／綠", cold:true, s:[["L",45]]},
+      {series:"新茶癮主張", n:"蘋果釀", cold:true, s:[["L",45]]},
+      {series:"新茶癮主張", n:"蘋果綠茶", cold:true, s:[["L",50]]},
+      {series:"新茶癮主張", n:"金鑽鳳梨水果茶", cold:true, s:[["L",50]]},
+      {series:"新茶癮主張", n:"洛神甘梅", s:[["L",35],["XL",45]]},
+      {series:"新茶癮主張", n:"多美荔", cold:true, s:[["L",55],["XL",65]]},
+      {series:"新茶癮主張", n:"白葡萄蘆薈凍飲", cold:true, s:[["L",50],["XL",60]]},
+      {series:"新茶癮主張", n:"養樂多綠", cold:true, s:[["L",45],["XL",60]]},
+      {series:"新茶癮主張", n:"鮮柚綠", cold:true, s:[["L",45],["XL",55]]},
+      {series:"新茶癮主張", n:"脆梅果綠", cold:true, s:[["L",45],["XL",55]]},
+      {series:"新茶癮主張", n:"甜蜜可可亞", s:[["L",55],["XL",65]]},
+      {series:"新茶癮主張", n:"阿華田", s:[["L",55],["XL",65]]},
+      {series:"新茶癮主張", n:"典藏咖啡", s:[["L",55],["XL",65]]},
+      {series:"新茶癮主張", n:"鐵觀音奶飛飛", s:[["L",45],["XL",55]]},
+      {series:"新茶癮主張", n:"胚芽鮮奶茶", s:[["L",55],["XL",75]]},
+      /* 原生純粹 */
+      {series:"原生純粹", n:"檸檬冬瓜", cold:true, fixed:true, s:[["L",40],["XL",50]]},
+      {series:"原生純粹", n:"古味濃紅茶", s:[["L",25],["XL",30]]},
+      {series:"原生純粹", n:"翡翠綠", s:[["L",25],["XL",30]]},
+      {series:"原生純粹", n:"松柏青", s:[["L",25],["XL",30]]},
+      {series:"原生純粹", n:"琥珀烏龍", s:[["L",25],["XL",30]]},
+      {series:"原生純粹", n:"雲霧烏龍綠", s:[["L",25],["XL",30]]},
+      {series:"原生純粹", n:"晨霧烏龍青", s:[["L",25],["XL",30]]},
+      {series:"原生純粹", n:"決明子麥", s:[["L",25],["XL",30]]},
+      {series:"原生純粹", n:"仙草茶", cold:true, s:[["L",25],["XL",35]]},
+      {series:"原生純粹", n:"洛神紅寶石", s:[["L",25],["XL",35]]},
+      {series:"原生純粹", n:"蘆筍汁", cold:true, s:[["L",25],["XL",35]]},
+      {series:"原生純粹", n:"冬瓜", fixed:true, s:[["L",25],["XL",35]]},
+      {series:"原生純粹", n:"梅子綠", s:[["L",30],["XL",35]]},
+      {series:"原生純粹", n:"仙草蜜", cold:true, s:[["L",35],["XL",45]]},
+      {series:"原生純粹", n:"檸檬撞蘆筍", cold:true, s:[["L",35],["XL",45]]},
+      /* 白露初醒（鮮奶茶系列 M/L/XL）*/
+      {series:"白露初醒", n:"黑糖鮮奶茶", fixed:true, s:[["M",55],["L",65],["XL",85]]},
+      {series:"白露初醒", n:"椰果鮮奶茶", s:[["M",60],["L",70],["XL",90]]},
+      {series:"白露初醒", n:"冬瓜鮮奶茶", fixed:true, s:[["M",45],["L",55],["XL",75]]},
+      {series:"白露初醒", n:"紅豆牛奶", s:[["M",45],["L",55],["XL",75]]},
+      {series:"白露初醒", n:"波霸鮮奶茶", s:[["M",55],["L",65],["XL",85]]},
+      {series:"白露初醒", n:"鐵觀音鮮奶茶", s:[["M",45],["L",55],["XL",75]]},
+      {series:"白露初醒", n:"綠／青／烏鮮奶", s:[["M",45],["L",55],["XL",75]]},
+      {series:"白露初醒", n:"鮮奶咖啡", s:[["L",50]]},
+      {series:"白露初醒", n:"英式奶飛飛", s:[["M",35],["L",45],["XL",55]]},
+      {series:"白露初醒", n:"鮮奶黑糖", fixed:true, s:[["L",55]]},
+      /* 渴望覺醒（水果 僅冷）*/
+      {series:"渴望覺醒", n:"鮮檸檬", cold:true, s:[["L",45],["XL",55]]},
+      {series:"渴望覺醒", n:"旺萊青", cold:true, s:[["L",55]]},
+      {series:"渴望覺醒", n:"荔枝貴妃烏龍", cold:true, s:[["L",55]]},
+      {series:"渴望覺醒", n:"荔枝美人凍飲", cold:true, fixed:true, s:[["L",65]]},
+      {series:"渴望覺醒", n:"芒果翡翠", cold:true, s:[["L",55]]},
+      {series:"渴望覺醒", n:"粉桃凍飲", cold:true, fixed:true, s:[["L",65]]},
+      {series:"渴望覺醒", n:"粉桃翡翠", cold:true, s:[["L",55]]},
+      {series:"渴望覺醒", n:"粉桃多多", cold:true, s:[["L",60]]},
+      {series:"渴望覺醒", n:"檸檬多多", cold:true, s:[["L",60],["XL",75]]},
+      {series:"渴望覺醒", n:"檸檬蘆薈", cold:true, s:[["L",60],["XL",70]]},
+      {series:"渴望覺醒", n:"檸檬甘梅", cold:true, s:[["L",50],["XL",60]]},
+      {series:"渴望覺醒", n:"檸檬翡翠", cold:true, s:[["L",55],["XL",65]]},
+      {series:"渴望覺醒", n:"百香多多", cold:true, s:[["L",60],["XL",75]]},
+      {series:"渴望覺醒", n:"百香鮮果汁", cold:true, s:[["L",40],["XL",50]]},
+      {series:"渴望覺醒", n:"百香綠", cold:true, s:[["L",45],["XL",55]]},
+      {series:"渴望覺醒", n:"百香蘆薈", cold:true, s:[["L",60],["XL",70]]},
+      {series:"渴望覺醒", n:"百香QQ綠", cold:true, s:[["L",60],["XL",70]]},
+      /* 雪球心願（僅冷 單一杯型）*/
+      {series:"雪球心願", n:"雪球紅茶", cold:true, s:[["L",55]]},
+      {series:"雪球心願", n:"雪球冬瓜", cold:true, fixed:true, s:[["L",55]]},
+      {series:"雪球心願", n:"雪球芒果翡翠", cold:true, fixed:true, s:[["L",60]]},
+      {series:"雪球心願", n:"雪球旺萊冰茶", cold:true, fixed:true, s:[["L",60]]},
+      {series:"雪球心願", n:"雪球阿華田", cold:true, s:[["L",65]]},
+      /* 蜜露春曉（僅冷 甜度固定）*/
+      {series:"蜜露春曉", n:"蜜露紅茶牛奶", cold:true, fixed:true, s:[["L",70],["XL",90]]},
+      {series:"蜜露春曉", n:"蜜露檸檬蘆薈", cold:true, fixed:true, s:[["L",75],["XL",85]]},
+      {series:"蜜露春曉", n:"蜜露檸檬", cold:true, fixed:true, s:[["L",60],["XL",70]]},
+      {series:"蜜露春曉", n:"蜜露奶茶", cold:true, fixed:true, s:[["L",60],["XL",70]]},
+      {series:"蜜露春曉", n:"蜜露鮮奶茶", cold:true, fixed:true, s:[["L",70],["XL",90]]},
+      {series:"蜜露春曉", n:"蜜露紅／綠／青／烏", cold:true, fixed:true, s:[["L",55],["XL",65]]},
+      {series:"蜜露春曉", n:"蜜露飲", cold:true, fixed:true, s:[["L",45],["XL",55]]}
+    ]
+  },
+  {
+    id:"s2", name:"第二家（待提供菜單）",
+    sugars:["正常糖","少糖","半糖","微糖","無糖"],
+    ices:["正常冰","少冰","微冰","去冰","熱"],
+    toppings:[{name:"珍珠",price:10},{name:"椰果",price:10}],
+    drinks:[
+      {series:"範例", n:"紅茶", s:[["M",25],["L",30]]},
+      {series:"範例", n:"奶茶", s:[["M",35],["L",45]]},
+      {series:"範例", n:"珍珠奶茶", s:[["M",40],["L",50]]}
+    ]
+  },
+  {
+    id:"s3", name:"第三家（待提供菜單）",
+    sugars:["正常糖","少糖","半糖","微糖","無糖"],
+    ices:["正常冰","少冰","微冰","去冰","熱"],
+    toppings:[{name:"珍珠",price:10},{name:"椰果",price:10}],
+    drinks:[
+      {series:"範例", n:"綠茶", s:[["M",25],["L",30]]},
+      {series:"範例", n:"檸檬綠茶", s:[["M",40],["L",50]]},
+      {series:"範例", n:"百香雙響炮", s:[["M",45],["L",55]]}
+    ]
+  }
+];
+
+/* 正規化：加上 id、name、sizes */
+SHOPS.forEach(function(sh){
+  sh.drinks.forEach(function(d,i){
+    d.id = sh.id+"-"+i;
+    d.name = d.n;
+    d.sizes = d.s.map(function(x){ return {label:x[0], price:x[1]}; });
+  });
+});
+
+/* ---------- 儲存層（各存各的）---------- */
+var SHARED = false, mem = {};
+var hasShared = (typeof window !== "undefined" && window.storage);
+var hasLocal = (function(){ try { window.localStorage.setItem("__t","1"); window.localStorage.removeItem("__t"); return true; } catch(e){ return false; } })();
+var store = {
+  get:function(k){ if(hasShared) return window.storage.get(k,SHARED).then(function(r){return r?r.value:null;}).catch(function(){return null;}); if(hasLocal) return Promise.resolve(window.localStorage.getItem(k)); return Promise.resolve(k in mem?mem[k]:null); },
+  set:function(k,v){ if(hasShared) return window.storage.set(k,v,SHARED).catch(function(){}); if(hasLocal){ window.localStorage.setItem(k,v); return Promise.resolve(); } mem[k]=v; return Promise.resolve(); },
+  del:function(k){ if(hasShared) return window.storage.delete(k,SHARED).catch(function(){}); if(hasLocal){ window.localStorage.removeItem(k); return Promise.resolve(); } delete mem[k]; return Promise.resolve(); },
+  list:function(p){ if(hasShared) return window.storage.list(p,SHARED).then(function(r){return (r&&r.keys)?r.keys:[];}).catch(function(){return [];}); var ks=[]; if(hasLocal){ for(var i=0;i<window.localStorage.length;i++){ var k=window.localStorage.key(i); if(k&&k.indexOf(p)===0) ks.push(k);} } else { ks=Object.keys(mem).filter(function(k){return k.indexOf(p)===0;}); } return Promise.resolve(ks); }
+};
+
+var ORDER_PREFIX="order:", NAME_KEY="myname:v1", SHOP_KEY="shop:v1";
+function money(n){ return "$"+(Number(n)||0); }
+function $(id){ return document.getElementById(id); }
+function sizeName(l){ return ({M:"中杯",L:"一般杯",XL:"胖胖杯"})[l] || l; }
+function isHotIce(x){ return x.indexOf("熱")>=0 || x.indexOf("溫")>=0; }
+
+/* ---------- 狀態 ---------- */
+var selectedShopId = SHOPS[0].id;
+var orders = [];
+var sel = { drinkId:SHOPS[0].drinks[0].id, sizeLabel:SHOPS[0].drinks[0].sizes[0].label, sugar:SHOPS[0].sugars[0], ice:SHOPS[0].ices[0], tops:[], qty:1 };
+var showSummary = false;
+
+function getShop(){ return SHOPS.filter(function(s){return s.id===selectedShopId;})[0] || SHOPS[0]; }
+function getDrink(){ var sh=getShop(); return sh.drinks.filter(function(d){return d.id===sel.drinkId;})[0] || sh.drinks[0]; }
+function availIces(){ var sh=getShop(), dk=getDrink(); return dk.cold ? sh.ices.filter(function(x){return !isHotIce(x);}) : sh.ices; }
+function currentOrders(){ return orders.filter(function(o){ return o.shopId===selectedShopId; }); }
+
+function reconcileSel(){
+  var sh=getShop();
+  if(!sh.drinks.some(function(d){return d.id===sel.drinkId;})) sel.drinkId=sh.drinks[0].id;
+  var dk=getDrink();
+  if(!dk.sizes.some(function(z){return z.label===sel.sizeLabel;})) sel.sizeLabel=dk.sizes[0].label;
+  if(dk.fixed){ sel.sugar=""; } else if(sh.sugars.indexOf(sel.sugar)<0){ sel.sugar=sh.sugars[0]; }
+  var ai=availIces(); if(ai.indexOf(sel.ice)<0) sel.ice=ai[0];
+  sel.tops=sel.tops.filter(function(n){ return sh.toppings.some(function(t){return t.name===n;}); });
+}
+
+/* ---------- 計價 ---------- */
+function unitPrice(){
+  var dk=getDrink(); var sz=dk.sizes.filter(function(z){return z.label===sel.sizeLabel;})[0]||dk.sizes[0];
+  var base=sz?sz.price:0; var sh=getShop();
+  var add=sel.tops.reduce(function(s,n){ var t=sh.toppings.filter(function(x){return x.name===n;})[0]; return s+(t?t.price:0); },0);
+  return base+add;
+}
+function updatePrice(){ $("curPrice").textContent = money(unitPrice()*sel.qty); }
+
+/* ---------- 畫面 ---------- */
+function renderHeader(){ $("curShop").innerHTML = '訂購中：<b>'+getShop().name+'</b>'; }
+function renderForm(){
+  var sh=getShop(), dk=getDrink();
+  var d=$("fDrink"); d.innerHTML="";
+  var series=[]; sh.drinks.forEach(function(x){ if(series.indexOf(x.series)<0) series.push(x.series); });
+  series.forEach(function(sr){
+    var og=document.createElement("optgroup"); og.label=sr;
+    sh.drinks.filter(function(x){return x.series===sr;}).forEach(function(dr){
+      var o=document.createElement("option"); o.value=dr.id;
+      var pr=dr.sizes.map(function(z){return sizeName(z.label)+z.price;}).join("／");
+      o.textContent=dr.name+"（"+pr+"）"; if(dr.id===sel.drinkId) o.selected=true; og.appendChild(o);
+    });
+    d.appendChild(og);
+  });
+
+  $("fSize").innerHTML = dk.sizes.map(function(z){
+    return '<button class="seg-b'+(sel.sizeLabel===z.label?" on":"")+'" data-sz="'+z.label+'">'+sizeName(z.label)+' '+money(z.price)+'</button>';
+  }).join("");
+  $("fSize").querySelectorAll("button").forEach(function(b){ b.onclick=function(){ sel.sizeLabel=b.getAttribute("data-sz"); renderForm(); updatePrice(); }; });
+
+  if(dk.fixed){
+    sel.sugar="";
+    $("fSugar").innerHTML='<span class="note">此品項甜度固定，無法調整</span>';
+  } else {
+    if(sh.sugars.indexOf(sel.sugar)<0) sel.sugar=sh.sugars[0];
+    $("fSugar").innerHTML = sh.sugars.map(function(s){ return '<button class="chip'+(sel.sugar===s?" on":"")+'">'+s+'</button>'; }).join("");
+    $("fSugar").querySelectorAll("button").forEach(function(b,i){ b.onclick=function(){ sel.sugar=sh.sugars[i]; renderForm(); }; });
+  }
+
+  var ai=availIces(); if(ai.indexOf(sel.ice)<0) sel.ice=ai[0];
+  $("fIce").innerHTML = ai.map(function(s){ return '<button class="chip'+(sel.ice===s?" on":"")+'">'+s+'</button>'; }).join("");
+  $("fIce").querySelectorAll("button").forEach(function(b,i){ b.onclick=function(){ sel.ice=ai[i]; renderForm(); }; });
+
+  if(sh.toppings.length){
+    $("fTopWrap").style.display="";
+    $("fTop").innerHTML = sh.toppings.map(function(t){ return '<button class="chip'+(sel.tops.indexOf(t.name)>=0?" on":"")+'">'+t.name+' +'+t.price+'</button>'; }).join("");
+    $("fTop").querySelectorAll("button").forEach(function(b,i){ b.onclick=function(){ var n=sh.toppings[i].name,k=sel.tops.indexOf(n); if(k>=0) sel.tops.splice(k,1); else sel.tops.push(n); renderForm(); updatePrice(); }; });
+  } else { $("fTopWrap").style.display="none"; }
+
+  $("qVal").textContent=sel.qty; updatePrice();
+}
+function specLine(o){
+  var p=[sizeName(o.sizeLabel)];
+  if(o.sugar) p.push(o.sugar);
+  p.push(o.ice);
+  if(o.tops&&o.tops.length) p.push("加"+o.tops.join("、"));
+  return p.join("・");
+}
+function renderTally(){
+  var os=currentOrders();
+  $("tCups").textContent=os.reduce(function(s,o){return s+(o.qty||0);},0);
+  $("tMoney").textContent=money(os.reduce(function(s,o){return s+(o.total||0);},0));
+}
+function renderList(){
+  var body=$("listBody"), os=currentOrders();
+  $("btnClear").style.display=os.length?"":"none";
+  $("btnShare").style.display=os.length?"":"none";
+  $("btnPrint").style.display=os.length?"":"none";
+  $("btnToggle").textContent=showSummary?"看清單":"店家彙總";
+  var cups=os.reduce(function(s,o){return s+(o.qty||0);},0), m=os.reduce(function(s,o){return s+(o.total||0);},0);
+  if(!os.length){ body.innerHTML='<p class="empty">這家還沒有人點。上面填一杯就會出現在這裡。</p>'; return; }
+  if(showSummary){
+    var groups={};
+    os.forEach(function(o){ var key=[o.drinkName,o.sizeLabel,o.sugar,o.ice,(o.tops||[]).join("/")].join("|"); if(!groups[key]) groups[key]={o:o,count:0}; groups[key].count+=o.qty||0; });
+    var rows=Object.keys(groups).map(function(k){ var g=groups[k]; return '<div class="grow-row"><span class="g-name">'+g.o.drinkName+'</span><span class="g-spec">'+specLine(g.o)+'</span><span class="g-count">×'+g.count+'</span></div>'; }).join("");
+    body.innerHTML='<div class="grouped"><p class="grouped-hint">打給店家照這份念就好：</p>'+rows+'<div class="grand">合計 '+cups+' 杯・'+money(m)+'</div></div>'; return;
+  }
+  var byP={}; os.forEach(function(o){ (byP[o.person]=byP[o.person]||[]).push(o); });
+  var html=Object.keys(byP).map(function(name){
+    var rows=byP[name].map(function(o){
+      return '<div class="ord"><div class="ord-main"><span class="ord-drink">'+o.drinkName+(o.qty>1?" ×"+o.qty:"")+'</span><span class="ord-spec">'+specLine(o)+(o.note?"・"+o.note:"")+'</span></div><span class="ord-price">'+money(o.total)+'</span><button class="del" data-key="'+(o._key||o.id)+'">✕</button></div>';
+    }).join("");
+    return '<div class="person"><div class="person-name">'+name+'</div>'+rows+'</div>';
+  }).join("");
+  body.innerHTML = html + '<div class="grand">合計 '+cups+' 杯・'+money(m)+'</div>';
+  body.querySelectorAll(".del").forEach(function(b){ b.onclick=function(){ removeOrder(b.getAttribute("data-key")); }; });
+}
+
+/* ---------- 動作 ---------- */
+function toast(msg){ var el=document.createElement("div"); el.className="toast"; el.textContent=msg; $("toastRoot").innerHTML=""; $("toastRoot").appendChild(el); setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },1800); }
+function loadOrders(){
+  return store.list(ORDER_PREFIX).then(function(keys){
+    return Promise.all(keys.map(function(k){ return store.get(k); })).then(function(vals){
+      var list=[]; vals.forEach(function(v,i){ if(!v) return; try{ var o=JSON.parse(v); o._key=keys[i]; list.push(o);}catch(e){} });
+      list.sort(function(a,b){ return (a.ts||0)-(b.ts||0); }); orders=list; renderList(); renderTally();
+    });
+  });
+}
+function addOrder(){
+  var name=$("fName").value.trim(); if(!name){ toast("先填你的名字啦"); return; }
+  var dk=getDrink(); if(!dk){ toast("先選一杯飲料"); return; }
+  var id=ORDER_PREFIX+Date.now()+"-"+Math.random().toString(36).slice(2,7);
+  var order={ id:id, shopId:selectedShopId, person:name, drinkName:dk.name, sizeLabel:sel.sizeLabel, sugar:sel.sugar, ice:sel.ice, tops:sel.tops.slice(), qty:sel.qty, note:$("fNote").value.trim(), unit:unitPrice(), total:unitPrice()*sel.qty, ts:Date.now() };
+  store.set(id, JSON.stringify(order)).then(function(){ return store.set(NAME_KEY,name); }).then(function(){ sel.tops=[]; sel.qty=1; $("fNote").value=""; renderForm(); return loadOrders(); }).then(function(){ toast("已加入 "+dk.name+" ×"+order.qty); });
+}
+function removeOrder(key){ store.del(key).then(loadOrders); }
+function buildShareText(){
+  var os=currentOrders(); var cups=os.reduce(function(s,o){return s+(o.qty||0);},0), m=os.reduce(function(s,o){return s+(o.total||0);},0);
+  var lines=os.map(function(o){ return o.person+"："+o.drinkName+" "+specLine(o)+(o.note?"・"+o.note:"")+(o.qty>1?" ×"+o.qty:"")+"（"+money(o.total)+"）"; });
+  return "【OPPC飲料訂購｜"+getShop().name+"】\n"+lines.join("\n")+"\n—— 合計 "+cups+" 杯・"+money(m);
+}
+function fallbackCopy(text){ try{ var ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); toast("已複製，貼到群組即可"); }catch(e){ toast("複製失敗，請手動選取"); } }
+function doShare(){
+  if(!currentOrders().length){ toast("這家還沒有訂單"); return; }
+  var text=buildShareText();
+  if(navigator.share){ navigator.share({text:text}).catch(function(){}); return; }
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){ toast("已複製，貼到群組即可"); },function(){ fallbackCopy(text); }); return; }
+  fallbackCopy(text);
+}
+function buildPrintHTML(){
+  var os=currentOrders(); var cups=os.reduce(function(s,o){return s+(o.qty||0);},0), m=os.reduce(function(s,o){return s+(o.total||0);},0);
+  var now=new Date(); var dstr=now.getFullYear()+"/"+(now.getMonth()+1)+"/"+now.getDate()+" "+now.getHours()+":"+("0"+now.getMinutes()).slice(-2);
+  var groups={};
+  os.forEach(function(o){ var key=[o.drinkName,o.sizeLabel,o.sugar,o.ice,(o.tops||[]).join("/")].join("|"); if(!groups[key]) groups[key]={o:o,count:0}; groups[key].count+=o.qty||0; });
+  var gRows=Object.keys(groups).map(function(k){ var g=groups[k]; return '<div class="pa-row"><span>'+g.o.drinkName+'</span><span class="r-spec">'+specLine(g.o)+'</span><span>×'+g.count+'</span></div>'; }).join("");
+  var byP={}; os.forEach(function(o){ (byP[o.person]=byP[o.person]||[]).push(o); });
+  var pRows=Object.keys(byP).map(function(name){ return byP[name].map(function(o){ return '<div class="pa-row"><span>'+name+'：'+o.drinkName+(o.qty>1?" ×"+o.qty:"")+'</span><span class="r-spec">'+specLine(o)+(o.note?"・"+o.note:"")+'</span><span>'+money(o.total)+'</span></div>'; }).join(""); }).join("");
+  return '<div class="pa-title">OPPC飲料訂購</div><div class="pa-sub">'+getShop().name+'　'+dstr+'</div><div class="pa-sec">店家彙總</div>'+gRows+'<div class="pa-sec">明細</div>'+pRows+'<div class="pa-total">合計 '+cups+' 杯・'+money(m)+'</div>';
+}
+function doPrint(){ if(!currentOrders().length){ toast("這家還沒有訂單"); return; } $("printArea").innerHTML=buildPrintHTML(); window.print(); }
+function clearAll(){
+  if(!currentOrders().length) return;
+  if(!window.confirm("確定清空「"+getShop().name+"」的訂單？")) return;
+  var keys=currentOrders().map(function(o){ return o._key||o.id; });
+  Promise.all(keys.map(function(k){ return store.del(k); })).then(loadOrders).then(function(){ toast("已清空，開新一輪"); });
+}
+
+/* ---------- 選擇店家 ---------- */
+function openShopPicker(){
+  var root=$("modalRoot");
+  root.innerHTML='<div class="modal" id="mOverlay"><div class="sheet"><div class="sheet-hd"><h2>選擇店家</h2><button class="x" id="mClose">✕</button></div><div class="sheet-body"><p class="switch-note">切換店家後，下面的菜單會換成那家的。各家訂單分開記，不會混在一起。</p><div class="shop-list">'+
+    SHOPS.map(function(s){ return '<button class="shop-opt'+(s.id===selectedShopId?" on":"")+'" data-id="'+s.id+'"><span><span class="so-name">'+s.name+'</span><span class="so-sub">'+s.drinks.length+' 款飲料</span></span>'+(s.id===selectedShopId?'<span class="so-check">目前</span>':'')+'</button>'; }).join("")+
+    '</div></div></div></div>';
+  function close(){ root.innerHTML=""; }
+  $("mOverlay").onclick=function(e){ if(e.target.id==="mOverlay") close(); };
+  $("mClose").onclick=close;
+  root.querySelectorAll(".shop-opt").forEach(function(b){ b.onclick=function(){ selectedShopId=b.getAttribute("data-id"); store.set(SHOP_KEY,selectedShopId); reconcileSel(); showSummary=false; renderHeader(); renderForm(); renderList(); renderTally(); close(); toast("已切換："+getShop().name); }; });
+}
+
+/* ---------- 綁定 ---------- */
+$("fDrink").addEventListener("change", function(e){ sel.drinkId=e.target.value; reconcileSel(); renderForm(); });
+$("qMinus").onclick=function(){ sel.qty=Math.max(1,sel.qty-1); $("qVal").textContent=sel.qty; updatePrice(); };
+$("qPlus").onclick=function(){ sel.qty+=1; $("qVal").textContent=sel.qty; updatePrice(); };
+$("btnAdd").onclick=addOrder;
+$("btnClear").onclick=clearAll;
+$("btnShare").onclick=doShare;
+$("btnPrint").onclick=doPrint;
+$("btnToggle").onclick=function(){ showSummary=!showSummary; renderList(); };
+$("btnShop").onclick=openShopPicker;
+
+/* ---------- 啟動 ---------- */
+store.get(SHOP_KEY).then(function(sid){ if(sid && SHOPS.some(function(s){return s.id===sid;})) selectedShopId=sid; reconcileSel(); renderHeader(); renderForm(); return loadOrders(); }).then(function(){ return store.get(NAME_KEY); }).then(function(n){ if(n) $("fName").value=n; });
+</script>
+</body>
+</html>
