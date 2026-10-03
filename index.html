@@ -156,7 +156,7 @@ select.in { -webkit-appearance:none; appearance:none;
     <label class="fld"><span class="lb">選飲料</span><select class="in" id="fDrink"></select></label>
     <div class="fld"><span class="lb">杯型</span><div class="seg" id="fSize"></div></div>
     <div class="fld" id="fSugarWrap"><span class="lb">糖度</span><div class="chips" id="fSugar"></div></div>
-    <div class="fld"><span class="lb">冰塊</span><div class="chips" id="fIce"></div></div>
+    <div class="fld" id="fIceWrap"><span class="lb">冰塊</span><div class="chips" id="fIce"></div></div>
     <div class="fld" id="fTopWrap"><span class="lb">加料</span><div class="chips" id="fTop"></div></div>
     <div class="fld row">
       <div><span class="lb">數量</span>
@@ -361,51 +361,60 @@ var SHOPS = [
     ]
   },
   {
-    id:"s3", name:"五十嵐",
-    sizeNames:{M:"中杯",L:"大杯"},
-    sugars:["正常糖","少糖","半糖","微糖","無糖"],
+    id:"s3", name:"麻古 MACU",
+    sizeNames:{M:"中杯",L:"大杯","瓶":"瓶裝"},
+    sugars:["正常糖","八分糖","半糖","三分糖","一分糖","無糖"],
     ices:["正常冰","少冰","微冰","去冰","熱"],
-    toppings:[],
+    toppings:[{name:"波霸",price:10},{name:"椰果",price:10},{name:"雙Q果",price:10},{name:"波波",price:10},{name:"紅萱粉粿(限冷)",price:10},{name:"綠茶凍(限冷)",price:10},{name:"芝芝",price:20},{name:"開心果芝芝",price:35},{name:"開心果脆脆",price:10}],
     drinks:[
-      {series:"找好茶", n:"茉莉綠茶", s:[["M",25],["L",30]]},
-      {series:"找好茶", n:"阿薩姆紅茶", s:[["M",25],["L",30]]},
-      {series:"找好茶", n:"四季春青茶", s:[["M",25],["L",30]]},
-      {series:"找好茶", n:"黃金烏龍", s:[["M",25],["L",30]]},
-      {series:"找好茶", n:"波霸紅", s:[["M",35],["L",45]]},
-      {series:"找好茶", n:"微檸檬青", s:[["M",35],["L",45]]},
-      {series:"找好茶", n:"檸檬綠", s:[["M",40],["L",55]]},
-      {series:"找好茶", n:"梅の綠", s:[["M",40],["L",55]]},
-      {series:"找好茶", n:"8冰綠", s:[["M",40],["L",55]]},
-      {series:"找好茶", n:"多多綠", s:[["M",40],["L",55]]},
-      {series:"找好茶", n:"旺來紅", s:[["M",40],["L",55]]},
-      {series:"找好茶", n:"柚子紅", s:[["M",40],["L",55]]},
-      {series:"找奶茶（奶精）", n:"奶茶", s:[["M",40],["L",55]]},
-      {series:"找奶茶（奶精）", n:"奶綠", s:[["M",40],["L",55]]},
-      {series:"找奶茶（奶精）", n:"烏龍奶", s:[["M",40],["L",55]]},
-      {series:"找奶茶（奶精）", n:"阿華田", s:[["M",40],["L",55]]},
-      {series:"找奶茶（奶精）", n:"珍珠奶茶", s:[["M",40],["L",55]]},
-      {series:"找奶茶（奶精）", n:"波霸奶茶", s:[["M",40],["L",55]]},
-      {series:"找奶茶（奶精）", n:"燕麥奶茶", s:[["M",40],["L",55]]},
-      {series:"找奶茶（奶精）", n:"麵茶奶茶", s:[["M",50],["L",65]]},
-      {series:"找拿鐵（鮮奶）", n:"紅茶拿鐵", s:[["M",50],["L",65]]},
-      {series:"找拿鐵（鮮奶）", n:"重焙烏龍拿鐵", s:[["M",50],["L",65]]},
-      {series:"找拿鐵（鮮奶）", n:"阿華田拿鐵", s:[["M",50],["L",65]]},
-      {series:"找拿鐵（鮮奶）", n:"珍珠紅茶拿鐵", s:[["M",50],["L",65]]},
-      {series:"找拿鐵（鮮奶）", n:"波霸紅茶拿鐵", s:[["M",50],["L",65]]},
-      {series:"找拿鐵（鮮奶）", n:"燕麥紅茶拿鐵", s:[["M",50],["L",65]]},
-      {series:"找拿鐵（鮮奶）", n:"麵茶紅茶拿鐵", s:[["M",55],["L",75]]},
-      {series:"找新鮮（無咖啡因）", n:"8冰茶", s:[["M",40],["L",55]]},
-      {series:"找新鮮（無咖啡因）", n:"柚子茶", s:[["M",40],["L",55]]},
-      {series:"找新鮮（無咖啡因）", n:"檸檬汁", s:[["M",50],["L",65]]},
-      {series:"找新鮮（無咖啡因）", n:"金桔檸檬", s:[["M",50],["L",65]]},
-      {series:"找新鮮（無咖啡因）", n:"檸檬梅汁", s:[["M",50],["L",65]]},
-      {series:"找新鮮（無咖啡因）", n:"檸檬多多", s:[["M",55],["L",75]]},
-      {series:"找冰淇淋", n:"冰淇淋紅茶", s:[["M",40],["L",55]]},
-      {series:"找冰淇淋", n:"芒果青", s:[["M",40],["L",55]]},
-      {series:"找冰淇淋", n:"荔枝烏龍", s:[["M",40],["L",55]]},
-      {series:"找冰淇淋", n:"冰淇淋奶茶", s:[["M",50],["L",65]]},
-      {series:"找冰淇淋", n:"冰淇淋紅茶拿鐵", s:[["M",55],["L",75]]},
-      {series:"找冰淇淋", n:"冰淇淋麵茶紅茶拿鐵", s:[["M",60],["L",80]]}
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"開心果椰水", s:[["M",80]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"開心果可可", s:[["M",80]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"楊枝甘露2.0(5-9月)", s:[["L",85]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"芝芝芒果果粒(5-9月)", s:[["L",90]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"芒果果粒波波(5-9月)", s:[["L",85]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"酪梨芒果甘露(7-9月)", s:[["L",85]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"蕃茄梅蜜(4-7月)", s:[["L",70],["瓶",100]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"蕃茄梅蜜波波(4-7月)", s:[["L",80],["瓶",110]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"芝芝葡萄果粒(10-5月)", s:[["L",85]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"葡萄果粒波波(10-5月)", s:[["L",85]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"芋泥波波鮮奶2.0(11-3月)", s:[["M",65]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"濃厚芋泥鮮奶(11-3月)", s:[["M",65]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"酪梨草莓甘露(2-3月)", s:[["L",90]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"芝芝草莓果粒(2-3月)", s:[["L",90]]},
+      {series:"飲中甜品(甜度冰量固定)", fixed:true, icefix:true, n:"草莓果粒波波(2-3月)", s:[["L",90]]},
+      {series:"果粒茶系列", cold:true, n:"香橙果粒茶", s:[["L",75],["瓶",105]]},
+      {series:"果粒茶系列", cold:true, n:"柳橙果粒茶", s:[["L",70],["瓶",100]]},
+      {series:"果粒茶系列", cold:true, n:"葡萄柚果粒茶", s:[["L",65],["瓶",95]]},
+      {series:"果粒茶系列", cold:true, n:"葡萄柚果粒蜜茶", s:[["L",65],["瓶",95]]},
+      {series:"果粒茶系列", cold:true, n:"柳橙芒果果粒茶(5-9月)", s:[["L",75]]},
+      {series:"原味茶", n:"高山金萱茶", s:[["L",30],["瓶",45]]},
+      {series:"原味茶", cold:true, n:"粉粿金萱", s:[["L",40],["瓶",55]]},
+      {series:"原味茶", n:"金萱雙Q", s:[["L",40],["瓶",55]]},
+      {series:"原味茶", n:"紅萱烏龍", s:[["L",35],["瓶",50]]},
+      {series:"原味茶", n:"翡翠綠茶", s:[["L",30],["瓶",45]]},
+      {series:"原味茶", n:"錫蘭紅茶", s:[["L",30],["瓶",45]]},
+      {series:"原味茶", n:"文山青茶", s:[["L",30],["瓶",45]]},
+      {series:"原味茶", n:"古早味紅茶", s:[["L",30],["瓶",45]]},
+      {series:"濃醇系列", n:"錫蘭奶茶", s:[["L",50],["瓶",75]]},
+      {series:"濃醇系列", n:"鐵觀音奶茶", s:[["L",50],["瓶",75]]},
+      {series:"濃醇系列", n:"波霸奶茶", s:[["L",50],["瓶",75]]},
+      {series:"經典特調", fixed:true, n:"梅子冰茶(甜度固定)", s:[["L",35],["瓶",50]]},
+      {series:"經典特調", n:"梅子綠茶", s:[["L",45]]},
+      {series:"經典特調", cold:true, n:"多多綠茶", s:[["L",50],["瓶",80]]},
+      {series:"鮮果茶飲", cold:true, n:"橙香紅萱", s:[["L",65],["瓶",95]]},
+      {series:"鮮果茶飲", cold:true, n:"柚香紅萱", s:[["L",60],["瓶",90]]},
+      {series:"鮮果茶飲", cold:true, n:"百香雙Q果", s:[["L",60],["瓶",80]]},
+      {series:"鮮果茶飲", cold:true, n:"百香綠茶", s:[["L",55],["瓶",75]]},
+      {series:"鮮果茶飲", cold:true, n:"翡翠柳橙", s:[["L",60],["瓶",90]]},
+      {series:"鮮果茶飲", cold:true, n:"蜂蜜檸檬", s:[["L",60]]},
+      {series:"鮮果茶飲", cold:true, n:"柚香翡翠", s:[["L",55],["瓶",85]]},
+      {series:"芝芝系列", n:"芝芝金萱", s:[["L",50]]},
+      {series:"芝芝系列", n:"芝芝金萱雙Q", s:[["L",60]]},
+      {series:"寶石系列(無咖啡因)", n:"蕎麥綠寶石", s:[["L",40],["瓶",55]]},
+      {series:"鮮奶系列", cold:true, n:"粉粿紅茶拿鐵", s:[["L",65],["瓶",95]]},
+      {series:"鮮奶系列", n:"紅茶拿鐵", s:[["L",65],["瓶",95]]},
+      {series:"鮮奶系列", n:"鐵觀音拿鐵", s:[["L",65],["瓶",95]]},
+      {series:"鮮奶系列", n:"波霸紅茶拿鐵", s:[["L",65],["瓶",95]]}
     ]
   }
 ];
@@ -453,7 +462,7 @@ function reconcileSel(){
   var dk=getDrink();
   if(!dk.sizes.some(function(z){return z.label===sel.sizeLabel;})) sel.sizeLabel=dk.sizes[0].label;
   if(dk.fixed){ sel.sugar=""; } else if(sh.sugars.indexOf(sel.sugar)<0){ sel.sugar=sh.sugars[0]; }
-  var ai=availIces(); if(ai.indexOf(sel.ice)<0) sel.ice=ai[0];
+  if(dk.icefix){ sel.ice=""; } else { var ai=availIces(); if(ai.indexOf(sel.ice)<0) sel.ice=ai[0]; }
   sel.tops=sel.tops.filter(function(n){ return sh.toppings.some(function(t){return t.name===n;}); });
 }
 
@@ -496,9 +505,14 @@ function renderForm(){
     $("fSugar").querySelectorAll("button").forEach(function(b,i){ b.onclick=function(){ sel.sugar=sh.sugars[i]; renderForm(); }; });
   }
 
-  var ai=availIces(); if(ai.indexOf(sel.ice)<0) sel.ice=ai[0];
-  $("fIce").innerHTML = ai.map(function(s){ return '<button class="chip'+(sel.ice===s?" on":"")+'">'+s+'</button>'; }).join("");
-  $("fIce").querySelectorAll("button").forEach(function(b,i){ b.onclick=function(){ sel.ice=ai[i]; renderForm(); }; });
+  if(dk.icefix){
+    sel.ice=""; $("fIceWrap").style.display="none";
+  } else {
+    $("fIceWrap").style.display="";
+    var ai=availIces(); if(ai.indexOf(sel.ice)<0) sel.ice=ai[0];
+    $("fIce").innerHTML = ai.map(function(s){ return '<button class="chip'+(sel.ice===s?" on":"")+'">'+s+'</button>'; }).join("");
+    $("fIce").querySelectorAll("button").forEach(function(b,i){ b.onclick=function(){ sel.ice=ai[i]; renderForm(); }; });
+  }
 
   if(sh.toppings.length){
     $("fTopWrap").style.display="";
@@ -511,7 +525,7 @@ function renderForm(){
 function specLine(o){
   var p=[sizeName(o.sizeLabel)];
   if(o.sugar) p.push(o.sugar);
-  p.push(o.ice);
+  if(o.ice) p.push(o.ice);
   if(o.tops&&o.tops.length) p.push("加"+o.tops.join("、"));
   return p.join("・");
 }
