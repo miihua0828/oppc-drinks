@@ -71,6 +71,28 @@ select.in { -webkit-appearance:none; appearance:none;
 .submit:active { transform:scale(.98); background:#873f12; }
 .submit .price { background:rgba(255,255,255,.22); padding:3px 10px; border-radius:8px; font-size:14px; }
 
+.seat-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.tbl-chip { border:2px solid var(--sugar); background:var(--sugar-soft); color:var(--sugar); border-radius:999px; padding:10px 20px; font-size:16px; font-weight:800; }
+.tbl-chip:active { transform:scale(.96); }
+.table-wrap { position:relative; width:100%; aspect-ratio:2 / 1; min-height:172px; margin:2px 0; }
+.felt { position:absolute; left:7%; right:7%; top:16%; bottom:16%; border-radius:999px;
+  background:radial-gradient(ellipse at 50% 38%, #2f8a5f 0%, #1f6b4a 55%, #175338 100%);
+  border:7px solid #5b3a1e; box-shadow:inset 0 0 22px rgba(0,0,0,.35), 0 3px 10px rgba(0,0,0,.2);
+  display:flex; align-items:center; justify-content:center; }
+.felt-logo { color:rgba(255,255,255,.45); font-weight:800; letter-spacing:4px; font-size:17px; }
+.dealer-label { position:absolute; transform:translate(-50%,-50%); padding:3px 11px; border-radius:11px;
+  background:#2A2118; color:#fff; font-size:11px; font-weight:700; letter-spacing:1px; white-space:nowrap; pointer-events:none; }
+.seat { position:absolute; transform:translate(-50%,-50%); width:44px; height:44px; border-radius:50%; padding:0;
+  border:2.5px solid var(--line); background:#fff; color:var(--ink); font-weight:800; font-size:17px;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,.18); }
+.seat.on { background:var(--sugar); color:#fff; border-color:var(--sugar); box-shadow:0 0 0 4px var(--sugar-soft); }
+.seat:active { transform:translate(-50%,-50%) scale(.92); }
+.table-opt { display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;
+  border:1.5px solid var(--line); background:#fff; border-radius:14px; padding:16px 18px; text-align:left; }
+.table-opt.on { border-color:var(--sugar); background:var(--sugar-soft); }
+.table-opt .to-name { font-size:17px; font-weight:800; }
+.table-opt .to-sub { font-size:12.5px; color:var(--sub); margin-top:2px; }
+
 .list { margin-top:22px; }
 .list-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px; }
 .list-hd h2 { font-size:17px; font-weight:800; }
@@ -100,6 +122,7 @@ select.in { -webkit-appearance:none; appearance:none;
 .g-spec { flex:1; font-size:12.5px; color:var(--sub); }
 .g-count { font-weight:800; color:var(--sugar); font-size:15px; }
 .grand { text-align:right; font-weight:800; font-size:15px; padding:12px 4px 2px; }
+.foot { text-align:center; color:var(--sub); font-size:12px; letter-spacing:.5px; padding:26px 0 6px; opacity:.8; }
 
 #printArea { display:none; }
 @media print {
@@ -152,7 +175,10 @@ select.in { -webkit-appearance:none; appearance:none;
 
   <section class="slip">
     <div class="slip-notch"></div>
-    <label class="fld"><span class="lb">你的名字</span><input class="in" id="fName" placeholder="輸入名字" /></label>
+    <div class="fld">
+      <div class="seat-hd"><span class="lb">你的座位</span><button class="tbl-chip" id="btnTable">選桌</button></div>
+      <div class="table-wrap" id="tableWrap"></div>
+    </div>
     <label class="fld"><span class="lb">選飲料</span><select class="in" id="fDrink"></select></label>
     <div class="fld"><span class="lb">杯型</span><div class="seg" id="fSize"></div></div>
     <div class="fld" id="fSugarWrap"><span class="lb">糖度</span><div class="chips" id="fSugar"></div></div>
@@ -178,6 +204,8 @@ select.in { -webkit-appearance:none; appearance:none;
     </div>
     <div id="listBody"><p class="empty">載入中…</p></div>
   </section>
+
+  <footer class="foot">OPPC drink-order v3.0 by 米花</footer>
 </div>
 
 <div id="printArea"></div>
@@ -439,17 +467,25 @@ var store = {
   list:function(p){ if(hasShared) return window.storage.list(p,SHARED).then(function(r){return (r&&r.keys)?r.keys:[];}).catch(function(){return [];}); var ks=[]; if(hasLocal){ for(var i=0;i<window.localStorage.length;i++){ var k=window.localStorage.key(i); if(k&&k.indexOf(p)===0) ks.push(k);} } else { ks=Object.keys(mem).filter(function(k){return k.indexOf(p)===0;}); } return Promise.resolve(ks); }
 };
 
-var ORDER_PREFIX="order:", NAME_KEY="myname:v1", SHOP_KEY="shop:v1";
+var ORDER_PREFIX="order:", SHOP_KEY="shop:v1", TABLE_KEY="table:v1", SEAT_KEY="seat:v1";
 function money(n){ return "$"+(Number(n)||0); }
 function $(id){ return document.getElementById(id); }
 function sizeName(l){ var sn=getShop().sizeNames||{}; return sn[l] || ({M:"中杯",L:"大杯",XL:"特大杯"})[l] || l; }
 function isHotIce(x){ return x.indexOf("熱")>=0 || x.indexOf("溫")>=0; }
+function tableLabel(t){ return t==="VIP" ? "VIP桌" : "桌"+t; }
+function seatLabel(s){ return s==="D" ? "荷官" : s+"號"; }
 
 /* ---------- 狀態 ---------- */
 var selectedShopId = SHOPS[0].id;
 var orders = [];
 var sel = { drinkId:SHOPS[0].drinks[0].id, sizeLabel:SHOPS[0].drinks[0].sizes[0].label, sugar:SHOPS[0].sugars[0], ice:SHOPS[0].ices[0], tops:[], qty:1 };
 var showSummary = false;
+
+/* 桌數與每桌座位數（另外固定有一桌 VIP；要改就改這兩個）*/
+var TABLES = 6;
+var SEATS = 10;
+var chosenTable = null;   // 目前桌號（字串 "1".."N"）
+var chosenSeat = null;    // 目前座位號（數字）
 
 function getShop(){ return SHOPS.filter(function(s){return s.id===selectedShopId;})[0] || SHOPS[0]; }
 function getDrink(){ var sh=getShop(); return sh.drinks.filter(function(d){return d.id===sel.drinkId;})[0] || sh.drinks[0]; }
@@ -570,11 +606,13 @@ function loadOrders(){
   });
 }
 function addOrder(){
-  var name=$("fName").value.trim(); if(!name){ toast("先填你的名字啦"); return; }
+  if(!chosenTable){ openTablePicker(true); return; }
+  if(!chosenSeat){ toast("先在牌桌上點你的座位"); return; }
   var dk=getDrink(); if(!dk){ toast("先選一杯飲料"); return; }
+  var person=tableLabel(chosenTable)+"・"+seatLabel(chosenSeat);
   var id=ORDER_PREFIX+Date.now()+"-"+Math.random().toString(36).slice(2,7);
-  var order={ id:id, shopId:selectedShopId, person:name, drinkName:dk.name, sizeLabel:sel.sizeLabel, sugar:sel.sugar, ice:sel.ice, tops:sel.tops.slice(), qty:sel.qty, note:$("fNote").value.trim(), unit:unitPrice(), total:unitPrice()*sel.qty, ts:Date.now() };
-  store.set(id, JSON.stringify(order)).then(function(){ return store.set(NAME_KEY,name); }).then(function(){ sel.tops=[]; sel.qty=1; $("fNote").value=""; renderForm(); return loadOrders(); }).then(function(){ toast("已加入 "+dk.name+" ×"+order.qty); });
+  var order={ id:id, shopId:selectedShopId, table:chosenTable, seat:chosenSeat, person:person, drinkName:dk.name, sizeLabel:sel.sizeLabel, sugar:sel.sugar, ice:sel.ice, tops:sel.tops.slice(), qty:sel.qty, note:$("fNote").value.trim(), unit:unitPrice(), total:unitPrice()*sel.qty, ts:Date.now() };
+  store.set(id, JSON.stringify(order)).then(function(){ sel.tops=[]; sel.qty=1; $("fNote").value=""; renderForm(); return loadOrders(); }).then(function(){ toast("已加入 "+person+"："+dk.name+" ×"+order.qty); });
 }
 function removeOrder(key){ store.del(key).then(loadOrders); }
 function buildShareText(){
@@ -620,6 +658,54 @@ function openShopPicker(){
   root.querySelectorAll(".shop-opt").forEach(function(b){ b.onclick=function(){ selectedShopId=b.getAttribute("data-id"); store.set(SHOP_KEY,selectedShopId); reconcileSel(); showSummary=false; renderHeader(); renderForm(); renderList(); renderTally(); close(); toast("已切換："+getShop().name); }; });
 }
 
+/* ---------- 牌桌／座位 ---------- */
+function renderTableChip(){ $("btnTable").textContent = chosenTable ? (tableLabel(chosenTable)+" ▾") : "選桌"; }
+function renderSeats(){
+  var wrap=$("tableWrap");
+  // 賽道型（stadium）牌桌：長直邊＋兩端半圓，座位沿桌緣等弧長分佈，荷官在上緣中央
+  var AR=2.0, B=0.34, S=0.52, d=0.02, Rv=B+d, Sr=S, arc=Math.PI*Rv;
+  var P=4*Sr+2*arc, G=0.17*P;
+  function pt(t){
+    var cx=AR/2, cy=0.5, x, y;
+    if(t<Sr){ x=cx+t; y=cy-Rv; }
+    else { t-=Sr;
+      if(t<arc){ var a=(-90+(t/arc)*180)*Math.PI/180; x=cx+Sr+Rv*Math.cos(a); y=cy+Rv*Math.sin(a); }
+      else { t-=arc;
+        if(t<2*Sr){ x=cx+Sr-t; y=cy+Rv; }
+        else { t-=2*Sr;
+          if(t<arc){ var b=(90+(t/arc)*180)*Math.PI/180; x=cx-Sr+Rv*Math.cos(b); y=cy+Rv*Math.sin(b); }
+          else { t-=arc; x=cx-Sr+t; y=cy-Rv; }
+        }
+      }
+    }
+    return { x:(x/AR*100), y:(y*100) };
+  }
+  var html='<div class="felt"><span class="felt-logo">OPPC</span></div>';
+  var dp=pt(0);
+  html+='<span class="dealer-label" style="left:'+dp.x.toFixed(1)+'%;top:'+dp.y.toFixed(1)+'%">荷官</span>';
+  for(var i=0;i<SEATS;i++){
+    var t=(G/2)+(i+0.5)*((P-G)/SEATS);
+    var p=pt(t), num=String(i+1);
+    html+='<button class="seat'+(chosenSeat===num?" on":"")+'" data-seat="'+num+'" style="left:'+p.x.toFixed(1)+'%;top:'+p.y.toFixed(1)+'%">'+num+'</button>';
+  }
+  wrap.innerHTML=html;
+  wrap.querySelectorAll(".seat").forEach(function(b){ b.onclick=function(){ chosenSeat=b.getAttribute("data-seat"); store.set(SEAT_KEY,chosenSeat); renderSeats(); }; });
+}
+function openTablePicker(firstTime){
+  var root=$("modalRoot");
+  var opts="";
+  for(var t=1;t<=TABLES;t++){
+    var on=((""+t)===chosenTable);
+    opts+='<button class="table-opt'+(on?" on":"")+'" data-t="'+t+'"><span><span class="to-name">桌 '+t+'</span><span class="to-sub">'+SEATS+' 個座位</span></span>'+(on?'<span class="so-check">目前</span>':'')+'</button>';
+  }
+  var vipOn=(chosenTable==="VIP");
+  opts+='<button class="table-opt'+(vipOn?" on":"")+'" data-t="VIP"><span><span class="to-name">VIP 桌</span><span class="to-sub">'+SEATS+' 個座位</span></span>'+(vipOn?'<span class="so-check">目前</span>':'')+'</button>';
+  root.innerHTML='<div class="modal" id="mOverlay"><div class="sheet"><div class="sheet-hd"><h2>'+(firstTime?"你坐哪一桌？":"選擇桌號")+'</h2>'+(firstTime?'':'<button class="x" id="mClose">✕</button>')+'</div><div class="sheet-body"><p class="switch-note">選好桌之後，點飲料時在下面的牌桌圖上點你的座位號（荷官也可點）就能下單。</p><div class="shop-list">'+opts+'</div></div></div></div>';
+  function close(){ root.innerHTML=""; }
+  if(!firstTime){ $("mOverlay").onclick=function(e){ if(e.target.id==="mOverlay") close(); }; $("mClose").onclick=close; }
+  root.querySelectorAll(".table-opt").forEach(function(b){ b.onclick=function(){ chosenTable=b.getAttribute("data-t"); store.set(TABLE_KEY,chosenTable); renderTableChip(); renderSeats(); close(); toast("已選 "+tableLabel(chosenTable)); }; });
+}
+
 /* ---------- 綁定 ---------- */
 $("fDrink").addEventListener("change", function(e){ sel.drinkId=e.target.value; reconcileSel(); renderForm(); });
 $("qMinus").onclick=function(){ sel.qty=Math.max(1,sel.qty-1); $("qVal").textContent=sel.qty; updatePrice(); };
@@ -630,9 +716,13 @@ $("btnShare").onclick=doShare;
 $("btnPrint").onclick=doPrint;
 $("btnToggle").onclick=function(){ showSummary=!showSummary; renderList(); };
 $("btnShop").onclick=openShopPicker;
+$("btnTable").onclick=function(){ openTablePicker(false); };
 
 /* ---------- 啟動 ---------- */
-store.get(SHOP_KEY).then(function(sid){ if(sid && SHOPS.some(function(s){return s.id===sid;})) selectedShopId=sid; reconcileSel(); renderHeader(); renderForm(); return loadOrders(); }).then(function(){ return store.get(NAME_KEY); }).then(function(n){ if(n) $("fName").value=n; });
+store.get(SHOP_KEY).then(function(sid){ if(sid && SHOPS.some(function(s){return s.id===sid;})) selectedShopId=sid; reconcileSel(); renderHeader(); renderForm(); return loadOrders(); })
+  .then(function(){ return store.get(TABLE_KEY); })
+  .then(function(t){ if(t) chosenTable=t; return store.get(SEAT_KEY); })
+  .then(function(s){ if(s && s!=="D") chosenSeat=s; renderTableChip(); renderSeats(); if(!chosenTable) openTablePicker(true); });
 </script>
 </body>
 </html>
